@@ -1,0 +1,145 @@
+---
+title: "Advanced Page Transitions with Next.js and Framer Motion"
+summary: "Learn how to create advanced page transitions using Next.js and Framer Motion for a smooth and dynamic user experience."
+publishedAt: 2024-06-08
+---
+
+In this tutorial, we'll explore how to create advanced page transitions in Next.js using Framer Motion. Framer Motion is a powerful library for animations and gestures that integrates seamlessly with React.
+
+## Getting Started
+
+First, ensure that you have Framer Motion installed in your Next.js project. You can install it using npm or yarn:
+
+```bash
+npm install framer-motion
+```
+
+<Image
+  src="/_static/blogs/project-demo.gif"
+  width={1280}
+  height={720}
+  alt="thumbnail"
+/>
+
+Once installed, you can start using Framer Motion in your Next.js application.
+
+## Basic Setup
+
+We'll begin by setting up a simple page transition. Create a `motion` component from Framer Motion and use it to wrap your page content.
+
+```tsx
+// pages/_app.tsx
+import { useRouter } from "next/router";
+import { AnimatePresence, motion } from "framer-motion";
+import "../styles/globals.css";
+
+function MyApp({ Component, pageProps }) {
+  const router = useRouter();
+
+  return (
+    <AnimatePresence exitBeforeEnter>
+      <motion.div
+        key={router.route}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <Component {...pageProps} />
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
+export default MyApp;
+```
+
+In this setup, we use `AnimatePresence` to manage the exit and entry animations for page transitions, and `motion.div` to define the transition animations.
+
+## Advanced Transitions
+
+For more advanced transitions, you can customize the animation properties and add multiple transitions. Here, we'll create a slide transition.
+
+```tsx
+// pages/_app.tsx
+import { useRouter } from "next/router";
+import { AnimatePresence, motion } from "framer-motion";
+import "../styles/globals.css";
+
+const variants = {
+  initial: { opacity: 0, x: 100 },
+  animate: { opacity: 1, x: 0 },
+  exit: { opacity: 0, x: -100 },
+};
+
+function MyApp({ Component, pageProps }) {
+  const router = useRouter();
+
+  return (
+    <AnimatePresence exitBeforeEnter>
+      <motion.div
+        key={router.route}
+        initial="initial"
+        animate="animate"
+        exit="exit"
+        variants={variants}
+        transition={{ duration: 0.5 }}
+      >
+        <Component {...pageProps} />
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
+export default MyApp;
+```
+
+In this example, we define a `variants` object to manage the `initial`, `animate`, and `exit` states of our page transitions, making the page slide in and out horizontally.
+
+## Combining Animations
+
+You can also combine multiple animations for a more dynamic experience. For instance, combining opacity and scale transformations.
+
+```tsx
+// pages/_app.tsx
+import { useRouter } from "next/router";
+import { AnimatePresence, motion } from "framer-motion";
+import "../styles/globals.css";
+
+const variants = {
+  initial: { opacity: 0, scale: 0.8 },
+  animate: { opacity: 1, scale: 1 },
+  exit: { opacity: 0, scale: 1.2 },
+};
+
+function MyApp({ Component, pageProps }) {
+  const router = useRouter();
+
+  return (
+    <AnimatePresence exitBeforeEnter>
+      <motion.div
+        key={router.route}
+        initial="initial"
+        animate="animate"
+        exit="exit"
+        variants={variants}
+        transition={{ duration: 0.5 }}
+      >
+        <Component {...pageProps} />
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
+export default MyApp;
+```
+
+Here, the page content scales in and out while also adjusting its opacity, creating a more visually engaging transition.
+
+## Conclusion
+
+Framer Motion provides a powerful and flexible way to create smooth and dynamic page transitions in Next.js. By mastering these techniques, you can significantly enhance the user experience of your web applications.
+
+Feel free to experiment with different animations and properties to achieve the desired effects. If you have any questions or run into issues, leave a comment below or check out the [Framer Motion documentation](https://www.framer.com/docs/).
+
+---

@@ -1,0 +1,136 @@
+---
+title: "Understanding Reconciliation in React Lists"
+summary: "A deep dive into how reconciliation works in React lists and the importance of the key attribute in preventing unnecessary re-renders."
+publishedAt: 2024-06-10
+---
+
+<Image
+  src={"/_static/blogs/react-lists-reconciliation/lists.jpeg"}
+  width={1280}
+  height={720}
+  alt="list"
+/>
+
+### Reconciliation and the Virtual DOM
+
+First, let's understand how React's rendering process works through the Virtual DOM.
+
+**Virtual DOM:** It's an object that represents the DOM tree structure of an app in memory. Here's how we get from JSX to the Virtual DOM:
+
+<Image
+  src={"/_static/blogs/react-lists-reconciliation/jsx-to-vdom.png"}
+  width={1280}
+  height={720}
+  alt="jsx-to-vdom"
+/>
+
+When you write JSX, it gets transpiled to plain JavaScript by Babel or another compiler. This invokes the `React.createElement()` function with several parameters as per your element, creating a plain JavaScript object known as the `Virtual DOM`.
+
+<Image
+  src={"/_static/blogs/react-lists-reconciliation/vdom-example.png"}
+  width={1280}
+  height={720}
+  alt="vdom"
+/>
+
+Most applications aren't static; they change with state updates. When state changes, React generates an entirely new Virtual DOM tree. This process is very fast and cheap. Generating such objects multiple times is less costly than performing a single DOM node operation.
+
+_Remember, it only generates the Virtual DOM object, not render it to the real DOM._
+
+React then diffs the new Virtual DOM tree with the previous one using a diffing algorithm to identify changes. Instead of re-rendering the entire tree, which is costly, it follows certain guidelines to make the updates efficiently.
+
+These optimization techniques are part of a process called **Reconciliation**.
+
+### Reconciliation in Lists
+
+One of the key aspects of React's reconciliation algorithm is handling lists.
+
+> 💡 Diffing of lists is performed using keys. Keys should be "stable, predictable, and unique."
+
+Consider an e-commerce app where thousands of items are fetched from the backend and displayed on the frontend. Here's an example sandbox to explore:
+
+https://codesandbox.io/s/funny-sea-99520?file=/src/App.js
+
+When we click the button to add a new item to the list, notice what items get rendered:
+
+<Image
+  src={"/_static/blogs/react-lists-reconciliation/whole-list-render.gif"}
+  width={1280}
+  height={720}
+  alt="whole-list-render"
+/>
+
+If you look closely at the `devtools`, you'll see that adding a new item at the top of the list causes all items below it to re-render. Ideally, the diffing process should only render the newly added item.
+
+```js
+var updatedTree = diff(oldListTree, newListTree);
+```
+
+In larger applications, this can be very inefficient, leading to poor performance and bad UX.
+
+### The Key Attribute
+
+The solution to this problem is using the `key` attribute in each list item. React itself gives a warning if the key prop is missing:
+
+```
+Warning: Each child in a list should have a unique "key" prop.
+```
+
+Here’s how to refactor the code:
+
+```jsx
+<ul className="list">
+  {items.map((item) => (
+    <li key={item.id}>{item.name}</li>
+  ))}
+</ul>
+```
+
+Let's see how this behaves in the browser:
+
+<Image
+  src={"/_static/blogs/react-lists-reconciliation/only-one-item-rerender.gif"}
+  width={1280}
+  height={720}
+  alt="only-one-item-rerender"
+/>
+
+With the key attribute, React can efficiently re-render only the newly added item.
+
+### Why Keys Matter
+
+> 💡 Keys tell React what makes an **item** in the list unique between renders.
+
+When items are added at the beginning of the list, React compares keys and only re-renders items that have changed.
+
+<Image
+  src={"/_static/blogs/react-lists-reconciliation/diffing-keyed-lists.png"}
+  width={1280}
+  height={720}
+  alt="diffing keyed lists"
+/>
+
+This makes React applications very fast, especially in complex UIs.
+
+### Choosing the Key
+
+Typically, unique IDs created when data is generated are the best choice for keys. Libraries like [nanoid](https://www.npmjs.com/package/nanoid) are also useful. Avoid using array indices as keys:
+
+```jsx
+<ul className="list">
+  {items.map((item, index) => (
+    <li key={index}>{item.name}</li>
+  ))}
+</ul>
+```
+
+Using indices can cause the entire list to re-render when a new item is added.
+
+### Conclusion
+
+Understanding how lists work in React can significantly improve performance and prevent bugs, especially in large applications. Reconciliation has other principles on how components should behave with state changes, which I'll cover in future posts.
+
+### References
+
+- [React Docs](https://reactjs.org/docs/reconciliation.html)
+- [Jason Miller: Preact: Into the void 0](https://www.youtube.com/watch?v=LY6y3HbDVmg)

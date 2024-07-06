@@ -1,0 +1,95 @@
+---
+title: "Create Smooth Text Animation with GSAP"
+summary: "Learn how to create smooth text animations using GSAP in your web projects."
+publishedAt: "2024-06-05"
+type: Blog
+---
+
+Creating smooth text animations can greatly enhance the user experience on your website. In this tutorial, we'll use GSAP (GreenSock Animation Platform) to animate text smoothly.
+
+## Getting Started
+
+First, make sure you have GSAP installed in your project. You can install it using npm:
+
+```bash
+npm install gsap
+```
+
+<Image
+  src="/_static/blogs/gsap.png"
+  width={1280}
+  height={720}
+  alt="thumbnail"
+/>
+
+Once installed, you can start using GSAP in your JavaScript or TypeScript files.
+
+## Basic Setup
+
+Here's a simple example of how to set up a basic text animation using GSAP. We'll animate the opacity and position of text elements.
+
+```ts
+import { useEffect, useRef } from "react";
+import gsap from "gsap";
+
+export default function SmoothTextAnimation() {
+  const textRef = useRef(null);
+
+  useEffect(() => {
+    gsap.fromTo(
+      textRef.current,
+      { opacity: 0, y: 50 },
+      { opacity: 1, y: 0, duration: 1, ease: "power3.out" }
+    );
+  }, []);
+
+  return (
+    <h1 ref={textRef} className="text-4xl font-bold">
+      Smooth Text Animation with GSAP
+    </h1>
+  );
+}
+```
+
+In this example, we use the useRef hook to reference the text element, and useEffect to apply the animation when the component mounts.
+
+## Advanced Animation
+
+You can create more advanced animations by chaining multiple animations together and using different easing functions. Here's an example:
+
+```tsx
+import { useEffect, useRef } from "react";
+import gsap from "gsap";
+
+export default function AdvancedTextAnimation() {
+  const textRef = useRef(null);
+
+  useEffect(() => {
+    const tl = gsap.timeline({ defaults: { ease: "power3.inOut" } });
+
+    tl.fromTo(
+      textRef.current,
+      { opacity: 0, y: 50 },
+      { opacity: 1, y: 0, duration: 1 },
+    ).fromTo(
+      textRef.current,
+      { scale: 1 },
+      { scale: 1.2, duration: 0.5, yoyo: true, repeat: -1 },
+    );
+  }, []);
+
+  return (
+    <h1 ref={textRef} className="text-4xl font-bold">
+      Advanced Text Animation with GSAP
+    </h1>
+  );
+}
+```
+
+In this example, we create a timeline (tl) and chain multiple animations together. The text will fade in, move to its original position, and then scale up and down in a loop.
+
+## Conclusion
+
+GSAP is a powerful tool for creating smooth and complex animations. By mastering GSAP, you can significantly enhance the visual appeal of your web projects.
+
+If you have any questions or run into issues, feel free to reach out in the comments below or check out the GSAP documentation.

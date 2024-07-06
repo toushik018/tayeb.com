@@ -1,0 +1,268 @@
+---
+title: "Efficient Redux Development with Redux Toolkit"
+type: Blog
+summary: "Discover how to streamline your Redux development process using Redux Toolkit, a powerful set of tools for building efficient and maintainable React-Redux applications."
+publishedAt: 2023-11-20
+---
+
+I've been using Redux for managing and updating the global state in my React apps for a while. Redux simplifies state management and implements complex performance optimizations, ensuring your components only re-render when necessary. However, a major complaint about React-Redux is the **boilerplate** code. 🍽️
+
+From configuring the store to integrating Redux DevTools and maintaining actions, dispatch, and reducers, it can be quite cumbersome.
+
+To overcome these challenges, we have two options:
+
+**1. Stop using Redux! ⚠️**
+
+Yes, you might not need Redux at all. React's built-in Context API can be used to inject state data into different components. For simpler apps, libraries like [react-query](https://react-query.tanstack.com/) can be used for data caching along with Context for state management.
+
+**2. Use Redux Toolkit (RTK):**
+
+Redux Toolkit is the official, opinionated, batteries-included toolset for efficient Redux development.
+
+Redux Toolkit was created to address three common concerns about Redux:
+
+- "Configuring a Redux store is too complicated."
+- "I have to add a lot of packages to get Redux to do anything useful."
+- "Redux requires too much boilerplate code."
+
+It includes utilities to simplify common use cases like store setup, creating reducers, immutable update logic, and more. Additionally, it follows the DUCK 🦆 pattern, significantly reducing boilerplate code.
+
+<Callout emoji="🧠">
+  Redux addons like Redux DevTools Extension and Redux Thunk are built-in with
+  RTK. 🤯🤯
+</Callout>
+
+Before diving into the code, you should have a basic understanding of Redux concepts like:
+
+- Store
+- Actions
+- Reducer
+- Provider Component
+
+If you're not familiar, check out the latest [basic tutorial](https://redux-toolkit.js.org/introduction/quick-start) on React-Redux docs. They offer fantastic tutorials for getting started with Redux.
+
+### Installation
+
+Start with the official Redux+JS template for Create React App:
+
+```bash
+npx create-react-app my-app --template redux
+```
+
+Alternatively, you can add the following packages to an existing React application:
+
+```bash
+yarn add redux react-redux @reduxjs/toolkit
+```
+
+We'll visualize a basic todo app and demonstrate the Redux part of it.
+
+### configureStore()
+
+This API wraps `createStore` to provide simplified configuration options and good defaults. It can automatically combine your slice reducers, add Redux middleware, include redux-thunk by default, and enable the `Redux DevTools Extension` out of the box.
+
+```jsx
+import { configureStore } from "@reduxjs/toolkit";
+import todoReducer from "../slices/todoSlice";
+
+export default configureStore({
+  reducer: {
+    todos: todoReducer,
+  },
+});
+```
+
+Here, we import `configureStore()` and pass the `todoReducer` into the root reducer, configuring it to the store. We access the values in `state.todos`.
+
+### createSlice()
+
+`createSlice()` is a collection of Redux reducer logic and actions for a single feature in your app. It automatically creates the action type strings, so no need to create action types for reducers.
+
+```jsx
+// todoSlice.js
+import { createSlice } from "@reduxjs/toolkit";
+
+export const todoSlice = createSlice({
+  name: "todos",
+  initialState: {
+    todoList: [],
+  },
+  reducers: {
+    addTodo: {},
+  },
+});
+
+export const { addTodo } = todoSlice.actions;
+
+export default todoSlice.reducer;
+```
+
+It takes three things:
+
+- **Name**: A string name for this slice of state. Generated action type constants will use this as a prefix.
+- **Initial State**: Sets the `todoList` to an empty array.
+- **Reducers Object**: Contains the reducer logic.
+
+Finally, we export the actions and reducer.
+
+### AddTodo Reducer
+
+This reducer takes the state and action, and pushes the payload into the state.
+
+```jsx
+addTodo: {
+  reducer: (state, action) => {
+    state.todoList.push(action.payload);
+  },
+},
+```
+
+Previously, we avoided mutating the state because Redux state is immutable. But `Redux Toolkit` uses `Immer` under the hood, allowing us to directly mutate the state. Here, we push the payload data into the `todoList`.
+
+### useDispatch()
+
+To call the data in our component, we use the `useDispatch()` hook.
+
+```jsx
+// AddTodo Component
+const dispatch = useDispatch();
+import { addTodo } from "../../redux/slices/todoSlice";
+
+const handleSubmit = () => {
+  dispatch(addTodo(value));
+};
+```
+
+Here, we use the `useDispatch()` hook to dispatch the `addTodo` action. Now, we have successfully added the Todo to the state. 🕺
+
+### Add other fields to the payload
+
+To keep the list in sync with the state in React, we add a key to each list item using a `prepare callback`.
+
+```jsx
+// todoSlice.js
+import { createSlice, nanoid } from "@reduxjs/toolkit";
+
+export const todoSlice = createSlice({
+  name: "todos",
+  initialState: {
+    todoList: [],
+  },
+  reducers: {
+    addTodo: {
+      reducer: (state, action) => {
+        state.todoList.push(action.payload);
+      },
+      prepare(value) {
+        return {
+          payload: {
+            key: nanoid(),
+            value: value,
+          },
+        };
+      },
+    },
+  },
+});
+
+export const { addTodo } = todoSlice.actions;
+
+export default todoSlice.reducer;
+```
+
+We import `nanoid()` from Redux Toolkit and add the prepare callback, which assigns a unique key using `nanoid()` and the `value` as the todo value.
+
+### useSelector()
+
+The `useSelector()` hook selects the state from the store and loads it into the component.
+
+```jsx
+// TodoList component
+import { useSelector } from "react-redux";
+
+const todoListdata = useSelector((state) => state.todos.todoList);
+
+//... map the todoListdata
+```
+
+## Fetch Data from an API
+
+Previously, we used middlewares like `redux-thunk` or `redux-saga` for fetching data. Redux Toolkit simplifies this with built-in `redux-thunk` and the `createAsyncThunk` function.
+
+`createAsyncThunk` generates promise lifecycle action types based on the action type prefix and returns a thunk action creator that runs the promise callback and dispatches the lifecycle actions based on the returned promise.
+
+It creates three types of actions automatically:
+
+- Pending ⏳
+- Fulfilled ✅
+- Rejected ❌
+
+```jsx
+// todoSlice.js
+import { createSlice, nanoid, createAsyncThunk } from "@reduxjs/toolkit";
+import axios from "axios";
+
+export const fetchTodos = createAsyncThunk("todos/fetchTodos", async () => {
+  const { data } = await axios.get(
+    "https://jsonplaceholder.typicode.com/todos/",
+  );
+  return data;
+});
+```
+
+`createAsyncThunk` takes two parameters:
+
+- **Action Type Name**: `'todos/fetchTodos'`, which appends the three action types (pending, fulfilled, rejected).
+- **Callback Function**: Performs async actions and returns the todos data.
+
+### Adding Status and Error to Initial State
+
+We add `status` and `error` to the initial state to track the action status and handle errors.
+
+```jsx
+// todoSlice.js
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import axios from "axios";
+
+export const fetchTodos = createAsyncThunk("todos/fetchTodos", async () => {
+  const response = await axios.get(
+    "https://jsonplaceholder.typicode.com/todos/",
+  );
+  return response.data.todoList;
+});
+
+export const todoSlice = createSlice({
+  name: "todos",
+  initialState: {
+    todoList: [],
+    status: "idle",
+    error: null,
+  },
+  reducers: {},
+  extraReducers: {
+    [fetchTodos.pending]: (state) => {
+      state.status = "loading";
+    },
+    [fetchTodos.fulfilled]: (state, action) => {
+      state.status = "succeeded";
+      state.todoList.push(...action.payload);
+    },
+    [fetchTodos.rejected]: (state, action) => {
+      state.status = "failed";
+      state.error = action.error.message;
+    },
+  },
+});
+
+export const { addTodo } = todoSlice.actions;
+
+export default todoSlice.reducer;
+```
+
+`createAsyncThunk` creates its own actions, so we need `extraReducers` to handle those actions and update the state accordingly. It checks the status of the state and maps the status and error in the state. If the data is fetched successfully, it pushes the data into `todoList`.
+
+Now, we can check the status and map the data in the corresponding component.
+
+That's it! 👋
+
+Redux Toolkit may seem confusing at first, but once you get the hang of it, it significantly reduces boilerplate in your application.
